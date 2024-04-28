@@ -33,7 +33,7 @@
 #pragma comment( lib, "libpq" )
 #endif
 
-#include <libpq-fe.h>
+#include <postgresql/libpq-fe.h>
 #include "DatabaseConnectionID.h"
 #include "DatabaseConnectionPool.h"
 #include "Mutex.h"
@@ -154,20 +154,12 @@ private:
   void connect()
   {
     short port = m_connectionID.getPort();
-
     m_pConnection = PQsetdbLogin
-      ( m_connectionID.getHost().c_str(), 
-        port == 0 ? "" : IntConvertor::convert( port ).c_str(),
-        "", 
-        "", 
-        m_connectionID.getDatabase().c_str(), 
-        m_connectionID.getUser().c_str(), 
-        m_connectionID.getPassword().c_str() );
+      ( m_connectionID.getHost().c_str(), port == 0 ? "" : IntConvertor::convert( port ).c_str(),
+        "", "", m_connectionID.getDatabase().c_str(), m_connectionID.getUser().c_str(), m_connectionID.getPassword().c_str() );
 
     if( !connected() )
-      throw ConfigError( "Unable to connect to postgres database '" 
-        + m_connectionID.getDatabase() + "': " 
-        + m_connectionID.getUser() + '@' + m_connectionID.getHost() + ":" + std::to_string(port) );
+      throw ConfigError( "Unable to connect to database" );
   }
 
   PGconn* m_pConnection;

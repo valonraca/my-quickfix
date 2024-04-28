@@ -1,4 +1,10 @@
-SUBDIRS = . test
+if NO_UNIT_TEST
+SUBDIRS =
+else
+SUBDIRS = test
+endif
+
+LEX += -+ -olex.yy.c
 
 lib_LTLIBRARIES = libquickfix.la
 
@@ -21,8 +27,6 @@ libquickfix_la_SOURCES = \
 	Settings.h \
 	MessageStore.cpp \
 	MessageStore.h \
-	HostDetailsProvider.cpp \
-	HostDetailsProvider.h \
 	SocketServer.cpp \
 	SocketServer.h \
 	SocketConnector.cpp \
@@ -59,11 +63,6 @@ libquickfix_la_SOURCES = \
 	PostgreSQLStore.h \
 	PostgreSQLLog.cpp \
 	PostgreSQLLog.h \
-	OdbcConnection.h \
-	OdbcStore.cpp \
-	OdbcStore.h \
-	OdbcLog.cpp \
-	OdbcLog.h \
 	DatabaseConnectionID.h \
 	DatabaseConnectionPool.h \
 	Dictionary.cpp \

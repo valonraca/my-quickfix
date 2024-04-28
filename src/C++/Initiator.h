@@ -71,7 +71,7 @@ public:
   void stop( bool force = false );
 
   /// Check to see if any sessions are currently logged on
-  bool isLoggedOn() const;
+  bool isLoggedOn();
 
   Session* getSession( const SessionID& sessionID, Responder& );
 
@@ -79,14 +79,14 @@ public:
   Session* getSession( const SessionID& sessionID ) const;
   const Dictionary* const getSessionSettings( const SessionID& sessionID ) const;
 
-  bool has( const SessionID& id ) const
+  bool has( const SessionID& id )
   { return m_sessions.find( id ) != m_sessions.end(); }
 
-  bool isStopped() const { return m_stop; }
+  bool isStopped() { return m_stop; }
 
 public:
-  Application& getApplication() const { return m_application; }
-  MessageStoreFactory& getMessageStoreFactory() const
+  Application& getApplication() { return m_application; }
+  MessageStoreFactory& getMessageStoreFactory()
   { return m_messageStoreFactory; }
 
   Log* getLog() 
@@ -100,9 +100,9 @@ protected:
   void setConnected( const SessionID& );
   void setDisconnected( const SessionID& );
 
-  bool isPending( const SessionID& ) const;
-  bool isConnected( const SessionID& ) const;
-  bool isDisconnected( const SessionID& ) const;
+  bool isPending( const SessionID& );
+  bool isConnected( const SessionID& );
+  bool isDisconnected( const SessionID& );
   void connect();
 
 private:
@@ -146,7 +146,7 @@ private:
   std::atomic<bool> m_processing;
   std::atomic<bool> m_firstPoll;
   std::atomic<bool> m_stop;
-  mutable Mutex m_mutex;
+  Mutex m_mutex;
 };
 /*! @} */
 }

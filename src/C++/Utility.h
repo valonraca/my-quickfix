@@ -24,17 +24,17 @@
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4503 4355 4786 4290 )
+#if ! defined(HAVE_CXX17) && __cplusplus >= 201703L
+#define HAVE_CXX17
 #endif
-
-#ifdef _MSC_VER
-#  define PRAGMA_PUSH( x )                      \
-   __pragma( warning( push ) )                  \
-   __pragma( warning( disable: x ) )
-#  define PRAGMA_POP                            \
-   __pragma( warning( pop ) )
-#else
-#  define PRAGMA_PUSH( x )
-#  define PRAGMA_POP
+#ifdef HAVE_CXX17
+#ifndef HAVE_STD_SHARED_PTR
+#define HAVE_STD_SHARED_PTR
+#endif
+#ifndef HAVE_STD_UNIQUE_PTR
+#define HAVE_STD_UNIQUE_PTR
+#endif
+#endif
 #endif
 
 #ifndef _MSC_VER
@@ -122,7 +122,7 @@ namespace FIX
 {
 #ifdef _MSC_VER
 typedef int socklen_t;
-typedef SSIZE_T ssize_t;
+typedef int ssize_t;
 typedef SOCKET socket_handle;
 #else
 typedef int socket_handle;

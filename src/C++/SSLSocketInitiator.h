@@ -130,7 +130,6 @@
 #include "Initiator.h"
 #include "SocketConnector.h"
 #include "SSLSocketConnection.h"
-#include "HostDetailsProvider.h"
 
 namespace FIX
 {
@@ -164,6 +163,7 @@ public:
 
 private:
   typedef std::map<socket_handle, SSLSocketConnection*> SocketConnections;
+  typedef std::map<SessionID, int> SessionToHostNum;
 
   void onConfigure( const SessionSettings& ) EXCEPT ( ConfigError );
   void onInitialize( const SessionSettings& ) EXCEPT ( RuntimeError );
@@ -182,10 +182,11 @@ private:
   void disconnectPendingSSLHandshakesThatTakeTooLong(time_t now);
   SSLHandshakeStatus handshakeSSL(SSLSocketConnection* connection);
   void handshakeSSLAndHandleConnection(SocketConnector& connector, socket_handle s);
+  void getHost( const SessionID&, const Dictionary&, std::string&, short&, std::string&, short& );
 
+  SessionToHostNum m_sessionToHostNum;
   SocketConnector m_connector;
 
-  HostDetailsProvider m_hostDetailsProvider;
   SocketConnections m_pendingSSLHandshakes;
   SocketConnections m_pendingConnections;
   SocketConnections m_connections;

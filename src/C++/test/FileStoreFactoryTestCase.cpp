@@ -24,15 +24,17 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <FileStore.h>
 #include <Session.h>
-#include "TestHelper.h"
 #include <fstream>
 #include <typeinfo>
-
-#include "catch_amalgamated.hpp"
+#include "TestHelper.h"
 
 using namespace FIX;
+
+SUITE(FileStoreFactoryTests)
+{
 
 struct callCreateFixture
 {
@@ -49,27 +51,25 @@ struct callCreateFixture
   FileStoreFactory object;
 };
 
-TEST_CASE_METHOD(callCreateFixture, "FileStoreFactoryTests")
+TEST_FIXTURE(callCreateFixture, callCreate)
 {
-  SECTION("callCreate")
-  {
-    SessionID sessionID( BeginString( "FIX.4.2" ),
-                         SenderCompID( "FS" ), TargetCompID( "FACT" ) );
+  SessionID sessionID( BeginString( "FIX.4.2" ),
+                       SenderCompID( "FS" ), TargetCompID( "FACT" ) );
 
-    MessageStore* messageStore = object.create( UtcTimeStamp::now(), sessionID );
-    CHECK( typeid( FileStore ) == typeid( *messageStore ) );
-    object.destroy( messageStore );
+  MessageStore* m = object.create( UtcTimeStamp::now(), sessionID );
+  CHECK( typeid( FileStore ) == typeid( *m ) );
+  object.destroy( m );
 
-    std::ifstream messageFile( "store/FIX.4.2-FS-FACT.body" );
-    CHECK( !messageFile.fail() );
-    messageFile.close();
+  std::ifstream messageFile( "store/FIX.4.2-FS-FACT.body" );
+  CHECK( !messageFile.fail() );
+  messageFile.close();
 
-    std::ifstream seqnumsFile( "store/FIX.4.2-FS-FACT.seqnums" );
-    CHECK( !seqnumsFile.fail() );
-    seqnumsFile.close();
+  std::ifstream seqnumsFile( "store/FIX.4.2-FS-FACT.seqnums" );
+  CHECK( !seqnumsFile.fail() );
+  seqnumsFile.close();
 
-    std::ifstream sessionFile( "store/FIX.4.2-FS-FACT.session" );
-    CHECK( !sessionFile.fail() );
-    sessionFile.close();
-  }
+  std::ifstream sessionFile( "store/FIX.4.2-FS-FACT.session" );
+  CHECK( !sessionFile.fail() );
+  sessionFile.close();
+}
 } //namespace FIX

@@ -229,12 +229,12 @@ void MySQLLog::backup()
 
 void MySQLLog::insert( const std::string& table, const std::string value )
 {
-  UtcTimeStamp time = UtcTimeStamp::now();
+  UtcTimeStamp time;
   int year, month, day, hour, minute, second, millis;
   time.getYMD( year, month, day );
   time.getHMS( hour, minute, second, millis );
 
-  char sqlTime[ 100 ];
+  char sqlTime[ 20 ];
   STRING_SPRINTF( sqlTime, "%d-%02d-%02d %02d:%02d:%02d",
            year, month, day, hour, minute, second );
 

@@ -8,7 +8,11 @@ endif
 
 SUBDIRS = C++ ${PYTHON3_DIR} ${RUBY_DIR}
 
+if NO_UNIT_TEST
+noinst_PROGRAMS =
+else
 noinst_PROGRAMS = at ut pt
+endif
 
 at_SOURCES = at.cpp at_application.h
 ut_SOURCES = ut.cpp
@@ -20,7 +24,8 @@ at_LDADD = C++/libquickfix.la
 ut_LDADD = C++/libquickfix.la
 pt_LDADD = C++/libquickfix.la
 
-AM_CPPFLAGS =-IC++ -IC++/test
+AM_CPPFLAGS =-IC++ -IC++/test -I$(top_builddir)/UnitTest++/src
+AM_LDFLAGS =-L$(top_builddir)/UnitTest++ -lUnitTest++
 
 all-local:
 	rm -f $(top_builddir)/test/ut 

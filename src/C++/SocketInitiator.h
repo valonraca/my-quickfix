@@ -29,7 +29,6 @@
 #include "Initiator.h"
 #include "SocketConnector.h"
 #include "SocketConnection.h"
-#include "HostDetailsProvider.h"
 
 namespace FIX
 {
@@ -46,6 +45,7 @@ public:
 
 private:
   typedef std::map < socket_handle, SocketConnection* > SocketConnections;
+  typedef std::map < SessionID, int > SessionToHostNum;
 
   void onConfigure( const SessionSettings& ) EXCEPT ( ConfigError );
   void onInitialize( const SessionSettings& ) EXCEPT ( RuntimeError );
@@ -62,9 +62,10 @@ private:
   void onError( SocketConnector& );
   void onTimeout( SocketConnector& );
 
-  SessionSettings m_settings;
+  void getHost( const SessionID&, const Dictionary&, std::string&, short&, std::string&, short& );
 
-  HostDetailsProvider m_hostDetailsProvider;
+  SessionSettings m_settings;
+  SessionToHostNum m_sessionToHostNum;
   SocketConnector m_connector;
   SocketConnections m_pendingConnections;
   SocketConnections m_connections;

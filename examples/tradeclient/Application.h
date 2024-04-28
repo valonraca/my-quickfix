@@ -56,6 +56,7 @@
 #include "quickfix/fix44/ExecutionReport.h"
 #include "quickfix/fix44/OrderCancelRequest.h"
 #include "quickfix/fix44/OrderCancelReject.h"
+#include "quickfix/fix44/SecurityList.h"
 #include "quickfix/fix44/OrderCancelReplaceRequest.h"
 #include "quickfix/fix44/MarketDataRequest.h"
 
@@ -73,13 +74,21 @@ class Application :
       public FIX::MessageCracker
 {
 public:
+
+  const FIX::SessionSettings& sessionSettings;
+  Application(const FIX::SessionSettings& s) : sessionSettings{s} {
+    auto sessionIds = s.getSessions();
+    if ( sessionIds.empty() ) {
+      throw std::runtime_error{"Could not find session id"};
+    }
+  }
   void run();
 
 private:
   void onCreate( const FIX::SessionID& ) {}
   void onLogon( const FIX::SessionID& sessionID );
   void onLogout( const FIX::SessionID& sessionID );
-  void toAdmin( FIX::Message&, const FIX::SessionID& ) {}
+  void toAdmin( FIX::Message&, const FIX::SessionID& );
   void toApp( FIX::Message&, const FIX::SessionID& )
   EXCEPT( FIX::DoNotSend );
   void fromAdmin( const FIX::Message&, const FIX::SessionID& )
@@ -96,15 +105,25 @@ private:
   void onMessage( const FIX43::ExecutionReport&, const FIX::SessionID& );
   void onMessage( const FIX43::OrderCancelReject&, const FIX::SessionID& );
   void onMessage( const FIX44::ExecutionReport&, const FIX::SessionID& );
+  void onMessage( const FIX44::SecurityList&, const FIX::SessionID& );
   void onMessage( const FIX44::OrderCancelReject&, const FIX::SessionID& );
   void onMessage( const FIX50::ExecutionReport&, const FIX::SessionID& );
   void onMessage( const FIX50::OrderCancelReject&, const FIX::SessionID& );
+  void onMessage( const FIX44::MarketDataRequestReject&, const FIX::SessionID& );
+  void onMessage( const FIX44::MarketDataSnapshotFullRefresh&, const FIX::SessionID& );
+  void onMessage( const FIX44::MarketDataIncrementalRefresh&, const FIX::SessionID& );
+  void onMessage( const FIX44::TradeCaptureReport&, const FIX::SessionID& );
 
   void queryEnterOrder();
   void queryCancelOrder();
   void queryReplaceOrder();
   void queryMarketDataRequest();
+  void querySecurityListRequest();
+  int queryBfxOrderFlags();
+  std::string queryBfxMarginTrading();
+  int queryBfxIsolatedMargin();
 
+  void queryResend();
   FIX40::NewOrderSingle queryNewOrderSingle40();
   FIX41::NewOrderSingle queryNewOrderSingle41();
   FIX42::NewOrderSingle queryNewOrderSingle42();

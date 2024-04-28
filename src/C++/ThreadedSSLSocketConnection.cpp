@@ -286,7 +286,7 @@ bool ThreadedSSLSocketConnection::read()
     }
     else if (result == 0 && m_pSession) // Timeout
     {
-      m_pSession->next( UtcTimeStamp::now() );
+      m_pSession->next();
     }
     else if (result < 0) // Error
     {

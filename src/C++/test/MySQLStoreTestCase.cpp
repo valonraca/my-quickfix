@@ -26,13 +26,15 @@
 
 #ifdef HAVE_MYSQL
 
-#include "TestHelper.h"
+#include <UnitTest++.h>
+#include <TestHelper.h>
 #include <MySQLStore.h>
 #include "MessageStoreTestCase.h"
 
-#include "catch_amalgamated.hpp"
-
 using namespace FIX;
+
+SUITE(MySQLStoreTests)
+{
 
 struct mySQLStoreFixture
 {
@@ -40,7 +42,7 @@ struct mySQLStoreFixture
   : factory( TestSettings::sessionSettings.get() )
   {
     SessionID sessionID( BeginString( "FIX.4.2" ),
-                        SenderCompID( "SETGET" ), TargetCompID( "TEST" ) );
+                         SenderCompID( "SETGET" ), TargetCompID( "TEST" ) );
 
     try
     {
@@ -55,7 +57,7 @@ struct mySQLStoreFixture
     if( reset )
       object->reset( UtcTimeStamp::now() );
 
-    this->resetAfter = reset;
+    this->resetAfter = resetAfter;
   }
 
   ~mySQLStoreFixture()
@@ -78,35 +80,31 @@ struct resetMySQLStoreFixture : mySQLStoreFixture
   resetMySQLStoreFixture() : mySQLStoreFixture( true ) {}
 };
 
-TEST_CASE_METHOD(resetMySQLStoreFixture, "resetMySQLStoreTests")
+TEST_FIXTURE(resetMySQLStoreFixture, setGet)
 {
-  SECTION("setGet")
-  {
-    CHECK_MESSAGE_STORE_SET_GET;
-  }
-
-  SECTION("setGetWithQuote")
-  {
-    CHECK_MESSAGE_STORE_SET_GET_WITH_QUOTE;
-  }
-
-  SECTION("other")
-  {
-    CHECK_MESSAGE_STORE_OTHER
-  }
+  CHECK_MESSAGE_STORE_SET_GET;
 }
 
-TEST_CASE_METHOD(noResetMySQLStoreFixture, "noResetMySQLStoreTests")
+TEST_FIXTURE(resetMySQLStoreFixture, setGetWithQuote)
 {
-  SECTION("reload")
-  {
-    CHECK_MESSAGE_STORE_RELOAD
-  }
+  CHECK_MESSAGE_STORE_SET_GET_WITH_QUOTE;
+}
 
-  SECTION("refresh")
-  {
-    CHECK_MESSAGE_STORE_RELOAD
-  }
+TEST_FIXTURE(resetMySQLStoreFixture, other)
+{
+  CHECK_MESSAGE_STORE_OTHER
+}
+
+TEST_FIXTURE(noResetMySQLStoreFixture, reload)
+{
+  CHECK_MESSAGE_STORE_RELOAD
+}
+
+TEST_FIXTURE(noResetMySQLStoreFixture, refresh)
+{
+  CHECK_MESSAGE_STORE_REFRESH
+}
+
 }
 
 #endif

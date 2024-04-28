@@ -22,6 +22,10 @@
 #ifndef FIX_FIELDCONVERTORS_H
 #define FIX_FIELDCONVERTORS_H
 
+#ifdef _MSC_VER
+#pragma warning( disable: 4146 )
+#endif
+
 #include "FieldTypes.h"
 #include "Exceptions.h"
 #include "Utility.h"
@@ -38,26 +42,16 @@ namespace FIX
 {
 
 typedef int signed_int;
-typedef int64_t signed_int64;
 typedef unsigned int unsigned_int;
-typedef uint64_t unsigned_int64;
 
-template<typename T>
-inline typename std::make_unsigned<T>::type _UNSIGNED_VALUE_OF( const T x )
-{ return x < 0 ? -( typename std::make_unsigned<T>::type )( x ) : ( typename std::make_unsigned<T>::type )( x ); }
-
-#define UNSIGNED_VALUE_OF( x )   \
-  PRAGMA_PUSH( 4146 )            \
-  _UNSIGNED_VALUE_OF( x )        \
-  PRAGMA_POP
+#define UNSIGNED_VALUE_OF( x ) ( ( x < 0 ) ? -unsigned_int(x) : unsigned_int(x) )
 
 #define IS_SPACE( x ) ( x == ' ' )
 #define IS_DIGIT( x ) ( unsigned_int( x - '0' ) < 10 )
 
-template<typename T>
-inline int number_of_symbols_in( const T value )
+inline int number_of_symbols_in( const signed_int value )
 {
-  typename std::make_unsigned<T>::type number = UNSIGNED_VALUE_OF( value );
+  unsigned_int number = UNSIGNED_VALUE_OF( value );
 
   int symbols = 0;
 
@@ -103,13 +97,12 @@ static const char digit_pairs[201] = {
   "90919293949596979899"
 };
 
-template<typename T>
-inline char* integer_to_string( char* buf, const size_t len, const T t )
+inline char* integer_to_string( char* buf, const size_t len, signed_int t )
 {
   const bool isNegative = t < 0;
   char* p = buf + len;
 
-  typename std::make_unsigned<T>::type number = UNSIGNED_VALUE_OF( t );
+  unsigned_int number = UNSIGNED_VALUE_OF( t );
 
   while( number > 99 )
   {
@@ -136,9 +129,8 @@ inline char* integer_to_string( char* buf, const size_t len, const T t )
   return p;
 }
 
-template<typename T>
 inline char* integer_to_string_padded
-( char* buf, const size_t len, const T t,
+( char* buf, const size_t len, signed_int t,
   const char paddingChar = '0')
 {
   char* p = integer_to_string( buf, len, t );
@@ -194,23 +186,18 @@ struct EmptyConvertor
 
 typedef EmptyConvertor StringConvertor;
 
-/// Converts integers to/from a string
-template <typename T>
-struct IntTConvertor
+/// Converts integer to/from a string
+struct IntConvertor
 {
-  static_assert(std::is_integral<T>::value, "An integer type is required.");
+  static const signed_int VALUE_MIN = (std::numeric_limits<signed_int>::min)();
+  static const signed_int VALUE_MAX = (std::numeric_limits<signed_int>::max)();
+  static const signed_int OVERFLOW_MAX = VALUE_MAX / 10;
 
-  typedef T value_type;
-  
-  static const T VALUE_MIN = (std::numeric_limits<T>::min)();
-  static const T VALUE_MAX = (std::numeric_limits<T>::max)();
-  static const T OVERFLOW_MAX = VALUE_MAX / 10;
-
-  static std::string convert( T value )
+  static std::string convert( signed_int value )
   {
     // buffer is big enough for significant digits and extra digit,
     // minus and null
-    char buffer[std::numeric_limits<T>::digits10 + 2];
+    char buffer[std::numeric_limits<signed_int>::digits10 + 2];
     const char* const start
       = integer_to_string( buffer, sizeof (buffer), value );
     return std::string( start, buffer + sizeof (buffer) - start );
@@ -219,15 +206,12 @@ struct IntTConvertor
   static bool convert(     
     std::string::const_iterator str, 
     std::string::const_iterator end, 
-    T& result )
+    signed_int& result )
   {
     bool isNegative = false;
-    typename std::make_unsigned<T>::type x = 0, nx = 0;
+    signed_int x = 0;
 
     if( str == end )
-      return false;
-
-    if( *str == '-' && std::is_unsigned<T>::value )
       return false;
 
     if( *str == '-' )
@@ -239,52 +223,35 @@ struct IntTConvertor
 
     do
     {
-      if( x > OVERFLOW_MAX ) return false; // overflow
-      const unsigned char c = *str - '0';
+      if( x < 0 || x > OVERFLOW_MAX ) return false; // overflow
+      const unsigned_int c = *str - '0';
       if( c > 9 ) return false;
-      nx = 10 * x + c;
-      if( nx < x ) return false; // overflow
-      x = nx;
+      x = 10 * x + c;
+      if( x < 0 && ( !isNegative || x != VALUE_MIN )) return false; // overflow
     } while ( ++str != end );
 
     if( isNegative )
-    {
-      if( nx > UNSIGNED_VALUE_OF( VALUE_MIN ) )
-        return false; // overflow
-    }
-    else if ( nx > VALUE_MAX )
-      return false; // overflow
-    
-    PRAGMA_PUSH( 4146 );
-    if( isNegative )
-      x = -x;
-    PRAGMA_POP;
+      x = -unsigned_int(x);
 
     result = x;
     return true;
   }
 
-  static bool convert( const std::string& value, T& result )
+  static bool convert( const std::string& value, signed_int& result )
   {
     return convert( value.begin(), value.end(), result );
   }
 
-  static T convert( const std::string& value )
+  static signed_int convert( const std::string& value )
   EXCEPT ( FieldConvertError )
   {
-    T result = 0;
+    signed_int result = 0;
     if( !convert( value.begin(), value.end(), result ) )
       throw FieldConvertError(value);
     else
       return result;
   }
 };
-
-/// Converts integer to/from a string
-typedef IntTConvertor<signed_int>   IntConvertor;
-
-/// Converts 64-bit integer to/from a string
-typedef IntTConvertor<signed_int64> Int64Convertor;
 
 /// Converts checksum to/from a string
 struct CheckSumConvertor
@@ -751,7 +718,6 @@ typedef StringConvertor STRING_CONVERTOR;
 typedef CharConvertor CHAR_CONVERTOR;
 typedef DoubleConvertor PRICE_CONVERTOR;
 typedef IntConvertor INT_CONVERTOR;
-typedef Int64Convertor INT64_CONVERTOR;
 typedef DoubleConvertor AMT_CONVERTOR;
 typedef DoubleConvertor QTY_CONVERTOR;
 typedef StringConvertor CURRENCY_CONVERTOR;
@@ -784,8 +750,5 @@ typedef StringConvertor XID_CONVERTOR;
 typedef StringConvertor XIDREF_CONVERTOR;
 typedef CheckSumConvertor CHECKSUM_CONVERTOR;
 }
-
-#undef PRAGMA_POP
-#undef PRAGMA_PUSH
 
 #endif //FIX_FIELDCONVERTORS_H

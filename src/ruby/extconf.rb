@@ -11,9 +11,7 @@ if( ENV['CXX'] != nil )
   CONFIG["LDSHARED"].gsub!("cc", ENV['CXX'])
 end
 
-RbConfig::MAKEFILE_CONFIG['CXX'] = ENV['CXX'] if ENV['CXX']
-
-additional_flags = ' -Wno-deprecated-declarations -Wno-deprecated -Wno-uninitialized -Wno-unused-but-set-variable -Wno-inconsistent-missing-override -Wno-register'
+additional_flags = ' -std=c++11 -Wno-deprecated-declarations -Wno-deprecated -Wno-maybe-uninitialized -Wno-unused-but-set-variable'
 $CFLAGS << additional_flags
 $CXXFLAGS << additional_flags
 

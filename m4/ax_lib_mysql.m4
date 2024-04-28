@@ -10,6 +10,7 @@ AC_DEFUN([_MYSQL_CHECK],[
     AC_SUBST(MYSQL_LIBS)
 ])
 
+
 AC_DEFUN([AX_LIB_MYSQL], [
     has_mysql=false
     AC_ARG_WITH(mysql,

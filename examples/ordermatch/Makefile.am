@@ -1,3 +1,9 @@
+if NO_UNIT_TEST
+SUBDIRS =
+else
+SUBDIRS = test
+endif
+
 noinst_PROGRAMS = ordermatch
 
 ordermatch_SOURCES = \

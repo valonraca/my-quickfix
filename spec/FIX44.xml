@@ -1219,9 +1219,13 @@
    <field name='SecurityReqID' required='Y' />
    <field name='SecurityResponseID' required='Y' />
    <field name='SecurityRequestResult' required='Y' />
-   <field name='TotNoRelatedSym' required='N' />
-   <field name='LastFragment' required='N' />
-   <component name='SecListGrp' required='N' />
+   <group name='NoRelatedSym' required='Y'>
+    <field name="Symbol" required="Y"/>
+    <field name="Currency" required="Y"/>
+    <field name="IncrementalMDGroup" required="Y"/>
+    <field name="MinTradeVol" required="Y"/>
+    <field name="MaxTradeVol" required="Y"/>
+   </group>
   </message>
   <message name='DerivativeSecurityListRequest' msgtype='z' msgcat='app'>
    <field name='SecurityReqID' required='Y' />
@@ -1471,7 +1475,7 @@
    <field name='LastSpotRate' required='N' />
    <field name='LastForwardPoints' required='N' />
    <field name='LastMkt' required='N' />
-   <field name='TradeDate' required='Y' />
+   <field name='TradeDate' required='N' />
    <field name='ClearingBusinessDate' required='N' />
    <field name='AvgPx' required='N' />
    <component name='SpreadOrBenchmarkCurveData' required='N' />
@@ -3425,7 +3429,9 @@
     <component name='SpreadOrBenchmarkCurveData' required='N' />
     <component name='YieldData' required='N' />
     <field name='RoundLot' required='N' />
+    <field name='IncrementalMDGroup' required='N' />
     <field name='MinTradeVol' required='N' />
+    <field name='MaxTradeVol' required='N' />
     <field name='TradingSessionID' required='N' />
     <field name='TradingSessionSubID' required='N' />
     <field name='ExpirationCycle' required='N' />
@@ -6596,5 +6602,7 @@
   <field number='954' name='Nested3PartySubIDType' type='INT' />
   <field number='955' name='LegContractSettlMonth' type='MONTHYEAR' />
   <field number='956' name='LegInterestAccrualDate' type='LOCALMKTDATE' />
+  <field number='1140' name='MaxTradeVol' type='QTY' />
+  <field number='6080' name='IncrementalMDGroup' type='INT' />
  </fields>
 </fix>

@@ -19,3 +19,4 @@ set_target_properties(tradeclient PROPERTIES
                       RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${PROJECT_SOURCE_DIR}/bin/release/tradeclient/)
 endif()    
 
+  

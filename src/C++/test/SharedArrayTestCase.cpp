@@ -24,28 +24,29 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <SharedArray.h>
-
-#include "catch_amalgamated.hpp"
 
 using namespace FIX;
 
-TEST_CASE("SharedArrayTests")
+SUITE(SharedArrayTests)
 {
-  SECTION("SharedArrayEqualsOperator_SharedArraySetEqualToItself")
-  {
-    shared_array<std::string> shared;
-    shared_array<std::string>* pShared = &shared;
 
-    shared = *pShared;
+TEST(SharedArrayEqualsOperator_SharedArraySetEqualToItself)
+{
+  shared_array<std::string> shared;
+  shared_array<std::string>* pShared = &shared;
 
-    CHECK(*pShared == shared);
-  }
+  shared = *pShared;
 
-  SECTION("CreateSharedArray_SizeZeroArray")
-  {
-    shared_array<std::string> shared = shared_array<std::string>::create(0);
+  CHECK_EQUAL(*pShared, shared);
+}
 
-    CHECK(size_t{0} == shared.size());
-  }
+TEST(CreateSharedArray_SizeZeroArray)
+{
+  shared_array<std::string> shared = shared_array<std::string>::create(0);
+
+  CHECK_EQUAL(0, (int) shared.size());
+}
+
 }

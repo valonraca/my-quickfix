@@ -1,5 +1,3 @@
-add_subdirectory(test)
-
 set(quickfix_VERSION_MAJOR 16)
 set(quickfix_VERSION_MINOR 0)
 set(quickfix_VERSION_PATCH 1)
@@ -16,7 +14,6 @@ set(quickfix_SOURCES
   FileLog.cpp
   FileStore.cpp
   Group.cpp
-  HostDetailsProvider.cpp
   HttpConnection.cpp
   HttpMessage.cpp
   HttpParser.cpp
@@ -73,7 +70,7 @@ endif()
 if (WIN32)
   add_library(${PROJECT_NAME} STATIC  ${quickfix_SOURCES})
   set_target_properties (${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX d)
-  target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} ws2_32 crypt32)
+  target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} ws2_32)
 else()
    if (QUICKFIX_SHARED_LIBS)
 	   add_library(${PROJECT_NAME} SHARED  ${quickfix_SOURCES})
@@ -83,28 +80,12 @@ else()
   target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES} ${MYSQL_CLIENT_LIBS} ${PostgreSQL_LIBRARIES} pthread)
 endif()
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/C++)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${quickfix_VERSION} SOVERSION ${quickfix_VERSION_MAJOR} )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
-
-get_target_property(debug_postfix ${PROJECT_NAME} DEBUG_POSTFIX)
-if(${debug_postfix} STREQUAL debug_postfix-NOTFOUND)
-   set (debug_postfix "")
-else()
-   if(CMAKE_BUILD_TYPE)
-       string(TOUPPER ${CMAKE_BUILD_TYPE} build_type)
-       if(NOT ${build_type} STREQUAL DEBUG)
-          set (debug_postfix "")
-       endif()
-   endif()
-endif()
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${PROJECT_NAME}${debug_postfix}.pdb:${PROJECT_NAME} DESTINATION lib OPTIONAL)
-
-
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/C++/ DESTINATION include/quickfix
         FILES_MATCHING PATTERN "*.h"
         PATTERN double-conversion EXCLUDE

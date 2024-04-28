@@ -26,8 +26,6 @@
 
 #include <atomic>
 #include <cstring>
-#include <cstdlib>
-#include <new>
 
 namespace FIX
 {

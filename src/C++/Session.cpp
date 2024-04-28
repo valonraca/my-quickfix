@@ -64,7 +64,6 @@ Session::Session( std::function<UtcTimeStamp()> timestamper,
   m_timestampPrecision( 3 ),
   m_persistMessages( true ),
   m_validateLengthAndChecksum( true ),
-  m_sendNextExpectedMsgSeqNum( false ),
   m_state( m_timestamper() ),
   m_dataDictionaryProvider( dataDictionaryProvider ),
   m_messageStoreFactory( messageStoreFactory ),
@@ -231,24 +230,6 @@ void Session::nextLogon( const Message& logon, const UtcTimeStamp& now )
     return;
   m_state.receivedLogon( true );
 
-  bool sendRetransmitsAfterLogon = false;
-  NextExpectedMsgSeqNum nextExpectedMsgSeqNum;
-  if( logon.getFieldIfSet(nextExpectedMsgSeqNum) )
-  {
-    if( nextExpectedMsgSeqNum.getValue() < getExpectedSenderNum() )
-      sendRetransmitsAfterLogon = true;
-    else if( nextExpectedMsgSeqNum.getValue() > getExpectedSenderNum() )
-    {
-      std::stringstream stream;
-      stream << "NextExpectedMsgSeqNum too low, expecting " << getExpectedSenderNum()
-             << " but received " << nextExpectedMsgSeqNum;
-      m_state.onEvent( stream.str() );
-      generateLogout( stream.str() );
-      disconnect();
-      return;
-    }
-  }
-
   if ( !m_state.initiate() 
        || (m_state.receivedReset() && !m_state.sentReset()) )
   {
@@ -266,16 +247,7 @@ void Session::nextLogon( const Message& logon, const UtcTimeStamp& now )
   auto const & msgSeqNum = logon.getHeader().getField<MsgSeqNum>();
   if ( isTargetTooHigh( msgSeqNum ) && !resetSeqNumFlag )
   {
-    if( m_sendNextExpectedMsgSeqNum )
-    {
-      m_state.onEvent( "Expecting retransmits FROM: " + IntConvertor::convert( getExpectedTargetNum() ) + " TO: " + IntConvertor::convert( msgSeqNum - 1 ) );
-      m_state.queue( msgSeqNum, logon );
-      m_state.resendRange( getExpectedTargetNum(), msgSeqNum - 1 );
-    }
-    else
-    {
-      doTargetTooHigh( logon );
-    }
+    doTargetTooHigh( logon );
   }
   else
   {
@@ -285,28 +257,6 @@ void Session::nextLogon( const Message& logon, const UtcTimeStamp& now )
 
   if ( isLoggedOn() )
     m_application.onLogon( m_sessionID );
-
-  if ( sendRetransmitsAfterLogon )
-  {
-    Locker l( m_mutex );
-
-    auto beginSeqNo = nextExpectedMsgSeqNum.getValue();
-    auto endSeqNo = getExpectedSenderNum() - 1;
-    m_state.onEvent( "Sending retransmits due to received NextExpectedMsgSeqNum is too low. FROM: " + IntConvertor::convert( beginSeqNo ) + " TO: " + IntConvertor::convert( endSeqNo ) );
-
-    if ( !m_persistMessages )
-    {
-      endSeqNo = EndSeqNo(endSeqNo + 1);
-      int next = m_state.getNextSenderMsgSeqNum();
-      if( endSeqNo > next )
-        endSeqNo = EndSeqNo(next);
-      generateSequenceReset( beginSeqNo, endSeqNo );
-    }
-    else
-    {
-      generateRetransmits( beginSeqNo, endSeqNo );
-    }
-  }
 }
 
 void Session::nextHeartbeat( const Message& heartbeat, const UtcTimeStamp& now )
@@ -399,20 +349,9 @@ void Session::nextResendRequest( const Message& resendRequest, const UtcTimeStam
     if( endSeqNo > next )
       endSeqNo = EndSeqNo(next);
     generateSequenceReset( beginSeqNo, endSeqNo );
-  }
-  else
-  {
-    generateRetransmits( beginSeqNo.getValue(), endSeqNo.getValue() );
+    return;
   }
 
-  MsgSeqNum msgSeqNum(0);
-  resendRequest.getHeader().getField( msgSeqNum );
-  if( !isTargetTooHigh(msgSeqNum) && !isTargetTooLow(msgSeqNum) )
-    m_state.incrNextTargetMsgSeqNum();
-}
-
-void Session::generateRetransmits(int beginSeqNo, int endSeqNo)
-{
   std::vector<std::string> messages;
   m_state.get( beginSeqNo, endSeqNo, messages );
 
@@ -515,6 +454,10 @@ void Session::generateRetransmits(int beginSeqNo, int endSeqNo)
       beginSeqNo = msgSeqNum + 1;
     generateSequenceReset( beginSeqNo, endSeqNo );
   }
+
+  resendRequest.getHeader().getField( msgSeqNum );
+  if( !isTargetTooHigh(msgSeqNum) && !isTargetTooLow(msgSeqNum) )
+    m_state.incrNextTargetMsgSeqNum();
 }
 
 Message Session::newMessage( const MsgType & msgType ) const
@@ -714,8 +657,6 @@ void Session::generateLogon()
     m_state.reset( m_timestamper() );
   if( shouldSendReset() )
     logon.setField( ResetSeqNumFlag(true) );
-  if (m_sendNextExpectedMsgSeqNum )
-    logon.setField( NextExpectedMsgSeqNum(getExpectedTargetNum()));
 
   fill( logon.getHeader() );
   m_state.lastReceivedTime( m_timestamper() );
@@ -734,8 +675,6 @@ void Session::generateLogon( const Message& aLogon )
   if( m_state.receivedReset() )
     logon.setField( ResetSeqNumFlag(true) );
   logon.setField( aLogon.getField<HeartBtInt>() );
-  if (m_sendNextExpectedMsgSeqNum )
-    logon.setField( NextExpectedMsgSeqNum( getExpectedTargetNum() + 1 )); // +1 because incoming Logon did not increment the target SeqNum yet
   fill( logon.getHeader() );
   sendRaw( logon );
   m_state.sentLogon( true );
@@ -1491,14 +1430,14 @@ Session* Session::lookupSession( const SessionID& sessionID )
   if ( find != s_sessions.end() )
     return find->second;
   else
-    return nullptr;
+    return 0;
 }
 
 Session* Session::lookupSession( const std::string& string, bool reverse )
 {
   Message message;
   if ( !message.setStringHeader( string ) )
-    return nullptr;
+    return 0;
 
   try
   {
@@ -1516,7 +1455,7 @@ Session* Session::lookupSession( const std::string& string, bool reverse )
     return lookupSession( SessionID( beginString, senderCompID,
                           targetCompID ) );
   }
-  catch ( FieldNotFound& ) { return nullptr; }
+  catch ( FieldNotFound& ) { return 0; }
 }
 
 bool Session::isSessionRegistered( const SessionID& sessionID )
@@ -1529,8 +1468,8 @@ Session* Session::registerSession( const SessionID& sessionID )
 {
   Locker locker( s_mutex );
   Session* pSession = lookupSession( sessionID );
-  if ( pSession == nullptr ) return nullptr;
-  if ( isSessionRegistered( sessionID ) ) return nullptr;
+  if ( pSession == 0 ) return 0;
+  if ( isSessionRegistered( sessionID ) ) return 0;
   s_registered[ sessionID ] = pSession;
   return pSession;
 }

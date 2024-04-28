@@ -24,17 +24,17 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <SessionState.h>
-#include <Log.h>
 #include <string>
 #include <sstream>
-
-#include "catch_amalgamated.hpp"
+#include "Log.h"
 
 using namespace FIX;
 
-TEST_CASE("SessionStateTests")
+SUITE(SessionStateTests)
 {
+
   class TestLog : public Log
   {
   public:
@@ -52,7 +52,7 @@ TEST_CASE("SessionStateTests")
     int eventsBackup = 0;
   };
 
-  SECTION("ClearSessionLog_StateLogNotNull_LogCleared")
+  TEST(ClearSessionLog_StateLogNotNull_LogCleared)
   {
     SessionSettings settings;
     TestLog log;
@@ -63,10 +63,10 @@ TEST_CASE("SessionStateTests")
 
     state.clear();
 
-    CHECK(0 == log.events);
+    CHECK_EQUAL(0, log.events);
   }
 
-  SECTION("clearSessionLog_StateLogIsNull_LogNotCleared")
+  TEST(ClearSessionLog_StateLogIsNull_LogNotCleared)
   {
     SessionSettings settings;
     TestLog log;
@@ -76,10 +76,10 @@ TEST_CASE("SessionStateTests")
 
     state.clear();
 
-    CHECK(5 == log.events);
+    CHECK_EQUAL(5, log.events);
   }
 
-  SECTION("backupSessionLog_StateLogNotNull_LogBackedUp")
+  TEST(BackupSessionLog_StateLogNotNull_LogBackedUp)
   {
     SessionSettings settings;
     TestLog log;
@@ -90,10 +90,10 @@ TEST_CASE("SessionStateTests")
 
     state.backup();
 
-    CHECK(5 == log.eventsBackup);
+    CHECK_EQUAL(5, log.eventsBackup);
   }
 
-  SECTION("backupSessionLog_StateLogIsNull_LogBackedUp")
+  TEST(BackupSessionLog_StateLogIsNull_LogBackedUp)
   {
     SessionSettings settings;
     TestLog log;
@@ -103,6 +103,6 @@ TEST_CASE("SessionStateTests")
 
     state.backup();
 
-    CHECK(0 == log.eventsBackup);
+    CHECK_EQUAL(0, log.eventsBackup);
   }
 }

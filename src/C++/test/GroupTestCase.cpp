@@ -24,129 +24,132 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <Group.h>
-
-#include "catch_amalgamated.hpp"
 
 using namespace FIX;
 
-TEST_CASE("GroupTests")
+SUITE(GroupTests)
 {
-  SECTION("copy")
-  {
-    Group object(1, 10, message_order(10, 9, 8, 7, 0));
-    object.setField(10, "10");
-    object.setField(9, "9");
-    object.setField(8, "8");
-    object.setField(7, "7");
 
-    std::string originalString;
-    object.calculateString( originalString );
-    
-    Group copy = object;
+TEST(copy)
+{
+  Group object(1, 10, message_order(10, 9, 8, 7, 0));
+  object.setField(10, "10");
+  object.setField(9, "9");
+  object.setField(8, "8");
+  object.setField(7, "7");
 
-    std::string copyString;
-    copy.calculateString( copyString );
+  std::string originalString;
+  object.calculateString( originalString );
+  
+  Group copy = object;
 
-    CHECK( originalString == copyString );
-  }
+  std::string copyString;
+  copy.calculateString( copyString );
 
-  SECTION("replace")
-  {
-    Group parent(5, 100);
+  CHECK_EQUAL( originalString, copyString );
+}
 
-    Group child(1, 10);
-    child.setField(1, "1");
-    child.setField(2, "2");
-    parent.addGroup(child);
+TEST(replace)
+{
+  Group parent(5, 100);
 
-    Group replacementChild(1, 10);
-    replacementChild.setField(1, "replace_1");
-    replacementChild.setField(2, "replace_2");
+  Group child(1, 10);
+  child.setField(1, "1");
+  child.setField(2, "2");
+  parent.addGroup(child);
 
-    parent.replaceGroup(1, replacementChild);
+  Group replacementChild(1, 10);
+  replacementChild.setField(1, "replace_1");
+  replacementChild.setField(2, "replace_2");
 
-    Group actualChild(1, 10);
-    parent.getGroup(1, actualChild);
+  parent.replaceGroup(1, replacementChild);
 
-    CHECK("replace_1" == actualChild.getField(1));
-    CHECK("replace_2" == actualChild.getField(2));
+  Group actualChild(1, 10);
+  parent.getGroup(1, actualChild);
 
-  }
+  CHECK_EQUAL("replace_1", actualChild.getField(1));
+  CHECK_EQUAL("replace_2", actualChild.getField(2));
 
-  SECTION("removeGroup")
-  {
-    Group parent(5, 100);
+}
 
-    Group child(1, 10);
-    child.setField(1, "1");
-    child.setField(2, "2");
-    parent.addGroup(child);
+TEST(removeGroup)
+{
+  Group parent(5, 100);
 
-    parent.removeGroup(child);
+  Group child(1, 10);
+  child.setField(1, "1");
+  child.setField(2, "2");
+  parent.addGroup(child);
 
-    CHECK(0U == parent.groupCount(1));
+  parent.removeGroup(child);
 
-  }
+  CHECK_EQUAL(0, (int) parent.groupCount(1));
 
-  SECTION("removeGroupByNum")
-  {
-    Group parent(5, 100);
+}
 
-    Group childA(1, 10);
-    childA.setField(1, "childA_1");
-    childA.setField(2, "childA_2");
-    parent.addGroup(childA);
+TEST(removeGroupByNum)
+{
+  Group parent(5, 100);
 
-    Group childB(1, 10);
-    childB.setField(1, "childB_1");
-    childB.setField(2, "childB_2");
-    parent.addGroup(childB);
+  Group childA(1, 10);
+  childA.setField(1, "childA_1");
+  childA.setField(2, "childA_2");
+  parent.addGroup(childA);
 
-    parent.removeGroup(1, childA);
+  Group childB(1, 10);
+  childB.setField(1, "childB_1");
+  childB.setField(2, "childB_2");
+  parent.addGroup(childB);
 
-    CHECK(1U == parent.groupCount(1));
+  parent.removeGroup(1, childA);
 
-    Group actualChild(1, 10);
-    parent.getGroup(1, actualChild);
-    CHECK("childB_1" == actualChild.getField(1));
-    CHECK("childB_2" == actualChild.getField(2));
+  CHECK_EQUAL(1, (int) parent.groupCount(1));
 
-  }
+  Group actualChild(1, 10);
+  parent.getGroup(1, actualChild);
+  CHECK_EQUAL("childB_1", actualChild.getField(1));
+  CHECK_EQUAL("childB_2", actualChild.getField(2));
 
-  SECTION("hasGroup")
-  {
-    Group parent(5, 100);
+}
 
-    Group child(1, 10);
-    child.setField(1, "1");
-    child.setField(2, "2");
-    parent.addGroup(child);
+TEST(hasGroup)
+{
+  Group parent(5, 100);
 
-    CHECK(parent.hasGroup(child));
+  Group child(1, 10);
+  child.setField(1, "1");
+  child.setField(2, "2");
+  parent.addGroup(child);
 
-    Group missingChild(2, 10);
-    CHECK(!parent.hasGroup(missingChild));
-  }
+  CHECK(parent.hasGroup(child));
 
-  SECTION("hasGroupByNum")
-  {
-    Group parent(5, 100);
+  Group missingChild(2, 10);
+  CHECK(!parent.hasGroup(missingChild));
+}
 
-    Group childA(1, 10);
-    childA.setField(1, "childA_1");
-    childA.setField(2, "childA_2");
-    parent.addGroup(childA);
+TEST(hasGroupByNum)
+{
+  Group parent(5, 100);
 
-    Group childB(1, 10);
-    childB.setField(1, "childB_1");
-    childB.setField(2, "childB_2");
-    parent.addGroup(childB);
+  Group childA(1, 10);
+  childA.setField(1, "childA_1");
+  childA.setField(2, "childA_2");
+  parent.addGroup(childA);
 
-    CHECK(parent.hasGroup(1, childA));
-    CHECK(parent.hasGroup(2, childB));
+  Group childB(1, 10);
+  childB.setField(1, "childB_1");
+  childB.setField(2, "childB_2");
+  parent.addGroup(childB);
 
-    Group missingChild(1, 10);
-    CHECK(!parent.hasGroup(3, missingChild));
-  }
+  CHECK(parent.hasGroup(1, childA));
+  CHECK(parent.hasGroup(2, childB));
+
+  Group missingChild(1, 10);
+  CHECK(!parent.hasGroup(3, missingChild));
+}
+
+
+
 }

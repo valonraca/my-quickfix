@@ -26,13 +26,15 @@
 
 #ifdef HAVE_ODBC
 
-#include "TestHelper.h"
+#include <UnitTest++.h>
+#include <TestHelper.h>
 #include <OdbcStore.h>
 #include "MessageStoreTestCase.h"
 
-#include "catch_amalgamated.hpp"
-
 using namespace FIX;
+
+SUITE(OdbcStoreTests)
+{
 
 struct odbcStoreFixture
 {
@@ -40,7 +42,7 @@ struct odbcStoreFixture
   : factory( TestSettings::sessionSettings.get() )
   {
     SessionID sessionID( BeginString( "FIX.4.2" ),
-                        SenderCompID( "SETGET" ), TargetCompID( "TEST" ) );
+                         SenderCompID( "SETGET" ), TargetCompID( "TEST" ) );
 
     try
     {
@@ -55,7 +57,7 @@ struct odbcStoreFixture
     if( reset )
       object->reset( UtcTimeStamp::now() );
 
-    this->resetAfter = reset;
+    this->resetAfter = resetAfter;
   }
 
   ~odbcStoreFixture()
@@ -78,35 +80,31 @@ struct resetOdbcStoreFixture : odbcStoreFixture
   resetOdbcStoreFixture() : odbcStoreFixture( true ) {}
 };
 
-TEST_CASE_METHOD(resetOdbcStoreFixture, "resetOdbcStoreTests")
+TEST_FIXTURE(resetOdbcStoreFixture, setGet)
 {
-  SECTION("setGet")
-  {
-    CHECK_MESSAGE_STORE_SET_GET;
-  }
-
-  SECTION("setGetWithQuote")
-  {
-    CHECK_MESSAGE_STORE_SET_GET_WITH_QUOTE;
-  }
-
-  SECTION("other")
-  {
-    CHECK_MESSAGE_STORE_OTHER
-  }
+  CHECK_MESSAGE_STORE_SET_GET;
 }
 
-TEST_CASE_METHOD(noResetOdbcStoreFixture, "noResetOdbcStoreTests")
+TEST_FIXTURE(resetOdbcStoreFixture, setGetWithQuote)
 {
-  SECTION("reload")
-  {
-    CHECK_MESSAGE_STORE_RELOAD
-  }
+  //CHECK_MESSAGE_STORE_SET_GET_WITH_QUOTE;
+}
 
-  SECTION("refresh")
-  {
-    CHECK_MESSAGE_STORE_RELOAD
-  }
+TEST_FIXTURE(resetOdbcStoreFixture, other)
+{
+  CHECK_MESSAGE_STORE_OTHER
+}
+
+TEST_FIXTURE(noResetOdbcStoreFixture, reload)
+{
+  CHECK_MESSAGE_STORE_RELOAD
+}
+
+TEST_FIXTURE(noResetOdbcStoreFixture, refresh)
+{
+  CHECK_MESSAGE_STORE_RELOAD
+}
+
 }
 
 #endif

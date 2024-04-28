@@ -16,7 +16,6 @@
 ** not clear to you.
 **
 ****************************************************************************/
-
 #ifdef _MSC_VER
 #pragma warning( disable : 4503 4355 4786 )
 #endif
@@ -24,10 +23,13 @@
 #include "quickfix/config.h"
 
 #include "quickfix/FileStore.h"
+#include "quickfix/FileLog.h"
 #include "quickfix/SocketInitiator.h"
 #ifdef HAVE_SSL
+
 #include "quickfix/ThreadedSSLSocketInitiator.h"
 #include "quickfix/SSLSocketInitiator.h"
+
 #endif
 #include "quickfix/SessionSettings.h"
 #include "quickfix/Log.h"
@@ -62,10 +64,11 @@ int main( int argc, char** argv )
   {
     FIX::SessionSettings settings( file );
 
-    Application application;
+    Application application{settings};
     FIX::FileStoreFactory storeFactory( settings );
-    FIX::ScreenLogFactory logFactory( settings );
-    
+    //FIX::ScreenLogFactory logFactory( settings );
+    FIX::FileLogFactory logFactory( settings );
+
     std::unique_ptr<FIX::Initiator> initiator;
 #ifdef HAVE_SSL
     if (isSSL.compare("SSL") == 0)

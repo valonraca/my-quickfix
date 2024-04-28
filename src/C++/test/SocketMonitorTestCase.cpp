@@ -24,54 +24,87 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <SocketMonitor.h>
 #include <Utility.h>
 
-#include "catch_amalgamated.hpp"
-
 using namespace FIX;
 
-TEST_CASE("SocketMonitorTests")
+SUITE(SocketMonitorTests)
+{
+
+  class TestStrategy : public SocketMonitor::Strategy {
+  public:
+      virtual ~TestStrategy(){}
+      virtual void onConnect( SocketMonitor&, socket_handle socket ){ connectCount++; };
+      virtual void onEvent( SocketMonitor&, socket_handle socket ){ eventCount++; };
+      virtual void onWrite( SocketMonitor&, socket_handle socket ){ writeCount++; };
+      virtual void onError( SocketMonitor&, socket_handle socket ){ errorCount++; };
+      virtual void onError( SocketMonitor& ){ errorCount++; };
+      virtual void onTimeout( SocketMonitor& monitor){
+        SocketMonitor::Strategy::onTimeout(monitor);
+        timeoutCount++;
+      };
+
+
+      int connectCount = 0;
+      int eventCount   = 0;
+      int writeCount   = 0;
+      int errorCount   = 0;
+      int timeoutCount = 0;
+
+  };
+
+TEST(addWrite_ReadSocketDoesNotExist_False)
 {
   SocketMonitor monitor;
   int socket = 101;
+  CHECK(!monitor.addWrite(socket));
 
-  SECTION("addWrite_ReadSocketDoesNotExist_False")
-  {
-    CHECK(!monitor.addWrite(socket));
+  socket_close(socket);
+}
 
-    socket_close(socket);
-  }
+TEST(addWrite_WriteSocketAlreadyExists_False)
+{
+  SocketMonitor monitor;
+  int socket = 101;
+  monitor.addRead(socket);
+  monitor.addWrite(socket);
 
-  SECTION("addWrite_WriteSocketAlreadyExists_False")
-  {
-    CHECK(monitor.addRead(socket));
-    CHECK(monitor.addWrite(socket));
-    CHECK(!monitor.addWrite(socket));
+  CHECK(!monitor.addWrite(socket));
 
-    socket_close(socket);
-  }
+  socket_close(socket);
+}
 
-  SECTION("Unsignal_SocketExists_WriteSocketErased")
-  {
-    CHECK(monitor.addRead(socket));
-    CHECK(monitor.addWrite(socket));
-    CHECK(monitor.addConnect(socket));
+TEST(Unsignal_SocketExists_WriteSocketErased)
+{
+  SocketMonitor monitor;
+  TestStrategy strategy;
 
-    monitor.signal(socket);
-    monitor.unsignal(socket);
+  int socket = 101;
+  monitor.addRead(socket);
+  monitor.addWrite(socket);
+  monitor.addConnect(socket);
 
-    socket_close(socket);
-  }
+  monitor.signal(socket);
+  monitor.unsignal(socket);
 
-  SECTION("Unsignal_SocketDoesNotExist_WriteSocketErased")
-  {
-    CHECK(monitor.addRead(socket));
-    CHECK(monitor.addConnect(socket));
+  socket_close(socket);
+}
 
-    monitor.signal(socket);
-    monitor.unsignal(socket);
+TEST(Unsignal_SocketDoesNotExist_WriteSocketErased)
+{
+  SocketMonitor monitor;
+  TestStrategy strategy;
 
-    socket_close(socket);
-  }
+  int socket = 101;
+  monitor.addRead(socket);
+  monitor.addConnect(socket);
+
+  monitor.signal(socket);
+  monitor.unsignal(socket);
+
+  socket_close(socket);
+}
+
 }

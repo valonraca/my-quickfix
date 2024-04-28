@@ -24,27 +24,28 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <Utility.h>
-
-#include "catch_amalgamated.hpp"
 
 using namespace FIX;
 
-TEST_CASE("FileUtilitiesTests")
+SUITE(FileUtilitiesTests)
 {
-  SECTION("separator")
-  {
-  #ifdef _MSC_VER
-    CHECK( "\\" == file_separator() );
-  #else
-    CHECK( "/" == file_separator() );
-  #endif
-  }
 
-  SECTION("appendpath")
-  {
-    CHECK( ("path" + file_separator() + "file") == file_appendpath("path", "file") );
-    CHECK( "path/file" == file_appendpath("path/", "file") );
-    CHECK( "path\\file" == file_appendpath("path\\", "file") );
-  }
+TEST(separator)
+{
+#ifdef _MSC_VER
+  CHECK_EQUAL( "\\", file_separator() );
+#else
+  CHECK_EQUAL( "/", file_separator() );
+#endif
+}
+
+TEST(appendpath)
+{
+  CHECK_EQUAL( ("path" + file_separator() + "file"), file_appendpath("path", "file") );
+  CHECK_EQUAL( "path/file", file_appendpath("path/", "file") );
+  CHECK_EQUAL( "path\\file", file_appendpath("path\\", "file") );
+}
+
 }

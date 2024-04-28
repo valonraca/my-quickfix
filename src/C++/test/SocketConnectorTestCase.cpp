@@ -24,6 +24,7 @@
 #include "config.h"
 #endif
 
+#include <UnitTest++.h>
 #include <SocketConnector.h>
 #include <SocketServer.h>
 #include "TestHelper.h"
@@ -31,19 +32,19 @@
 #include <stdlib.h>
 #endif
 
-#include "catch_amalgamated.hpp"
-
 using namespace FIX;
 
-TEST_CASE("SocketConnectorTests")
+SUITE(SocketConnectorTests)
 {
-  SECTION("accept")
-  {
-    SocketConnector object;
-    SocketServer server( 0 );
-    socket_handle socket = server.add( TestSettings::port, true, true );
-    CHECK( object.connect( "127.0.0.1", TestSettings::port, false, 1024, 1024 ) );
-    CHECK( server.accept(socket) );
-    server.close();
-  }
+
+TEST(accept)
+{
+  SocketConnector object;
+  SocketServer server( 0 );
+  socket_handle socket = server.add( TestSettings::port, true, true );
+  CHECK( object.connect( "127.0.0.1", TestSettings::port, false, 1024, 1024 ) );
+  CHECK( server.accept(socket) );
+  server.close();
+}
+
 }

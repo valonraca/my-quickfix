@@ -525,12 +525,7 @@ void HttpConnection::processSession
       pSession->setPersistMessages( copy.getParameter(PERSIST_MESSAGES) != "0" );
       copy.removeParameter(PERSIST_MESSAGES);
     }
-    if( copy.hasParameter(SEND_NEXT_EXPECTED_MSG_SEQ_NUM) )
-    {
-      pSession->setSendNextExpectedMsgSeqNum( copy.getParameter(SEND_NEXT_EXPECTED_MSG_SEQ_NUM) != "0" );
-      copy.removeParameter(SEND_NEXT_EXPECTED_MSG_SEQ_NUM);
-    }
-    
+
     if( url != copy.toString() )
       h << "<META http-equiv='refresh' content=0;URL='" << copy.toString() << "'>";
 
@@ -562,7 +557,6 @@ void HttpConnection::processSession
     showRow( b, REFRESH_ON_LOGON, pSession->getRefreshOnLogon(), url );
     showRow( b, MILLISECONDS_IN_TIMESTAMP, pSession->getMillisecondsInTimeStamp(), url );
     showRow( b, PERSIST_MESSAGES, pSession->getPersistMessages(), url );
-    showRow( b, SEND_NEXT_EXPECTED_MSG_SEQ_NUM, pSession->getSendNextExpectedMsgSeqNum(), url );
   }
   catch( std::exception& e )
   {

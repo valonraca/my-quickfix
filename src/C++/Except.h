@@ -30,7 +30,7 @@
 
 #ifdef __cpp_noexcept_function_type
 #define NOEXCEPT noexcept
-#define EXCEPT(...)
+#define EXCEPT(...) noexcept(false)
 #else
 #define NOEXCEPT throw()
 #define EXCEPT(...) throw(__VA_ARGS__)
